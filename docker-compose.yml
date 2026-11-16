@@ -1,0 +1,27 @@
+
+services:
+  database:
+    image: postgis/postgis:16-3.4
+    container_name: smartcity_database
+    restart: always
+
+    environment:
+      POSTGRES_USER: smartcity_user
+      POSTGRES_PASSWORD: smartcity_pass
+      POSTGRES_DB: smartcity_db
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smartcity_user -d smartcity_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
