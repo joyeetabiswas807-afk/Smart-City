@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Waterlogging Digital Twin</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M12 2.5c3.2 4.2 6 7.6 6 11a6 6 0 0 1-12 0c0-3.4 2.8-6.8 6-11z" fill="currentColor"/></svg>
+      <div>
+        <strong>Waterlogging Twin</strong>
+        <span>Citizen-verified flood status</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span id="rain-chip" class="chip" title="Recent rainfall">Rain —</span>
+      <span id="mode-badge" class="chip chip-mock" hidden>Demo data</span>
+      <span id="live-dot" class="live" title="Last refresh">● live</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel">
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="overview" class="active">Overview</button>
+        <button role="tab" data-tab="report">Report</button>
+        <button role="tab" data-tab="mine">My reports <span id="mine-count" class="count" hidden>0</span></button>
+        <button role="tab" data-tab="admin">Admin</button>
+      </nav>
+
+      <!-- OVERVIEW -->
+      <section id="tab-overview" class="tabpane">
+        <div id="summary" class="summary"></div>
+        <div id="area-detail"></div>
+        <h2 class="h2">Areas</h2>
+        <ul id="area-list" class="area-list"></ul>
+        <p class="note">Status only changes after a report passes verification. Unverified reports never change the confirmed status.</p>
+      </section>
+
+      <!-- REPORT -->
+      <section id="tab-report" class="tabpane" hidden>
+        <h2 class="h2">Submit a report</h2>
+        <form id="report-form" novalidate>
+          <fieldset>
+            <legend>What are you seeing?</legend>
+            <div class="seg">
+              <label><input type="radio" name="report_type" value="waterlogged" checked><span>💧 Area is waterlogged</span></label>
+              <label><input type="radio" name="report_type" value="cleared"><span>✔ Water has cleared</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Where?</legend>
+            <p id="pin-text" class="pin-text">Tap the map to place your pin, or drag it.</p>
+            <button type="button" id="btn-locate" class="btn btn-ghost">📍 Use my location</button>
+          </fieldset>
+
+          <fieldset>
+            <legend>Water depth (approx.)</legend>
+            <div id="depth-chips" class="chips"></div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Photo <span class="opt">(optional)</span></legend>
+            <input type="file" id="photo" accept="image/jpeg,image/png,image/webp">
+            <img id="photo-preview" alt="Photo preview" hidden>
+            <p class="note">Stored as supporting evidence only. It is not analysed automatically.</p>
+          </fieldset>
+
+          <p id="form-error" class="error" role="alert" hidden></p>
+          <button type="submit" id="btn-submit" class="btn btn-primary">Submit report</button>
+        </form>
+        <div id="report-result"></div>
+      </section>
+
+      <!-- MY REPORTS -->
+      <section id="tab-mine" class="tabpane" hidden>
+        <h2 class="h2">My reports</h2>
+        <div id="mine-list"></div>
+        <p id="mine-empty" class="note">You haven't submitted any reports from this browser yet.</p>
+      </section>
+
+      <!-- ADMIN -->
+      <section id="tab-admin" class="tabpane" hidden>
+        <h2 class="h2">Administrator</h2>
+        <div class="row">
+          <button id="btn-recheck" class="btn btn-primary">Recheck pending now</button>
+          <span id="recheck-msg" class="note"></span>
+        </div>
+        <h3 class="h3">Pending reports</h3>
+        <div id="admin-pending"></div>
+        <h3 class="h3">Water-level sensors <span class="opt">(simulated)</span></h3>
+        <table class="tbl" id="admin-sensors"></table>
+        <h3 class="h3">Recent status changes</h3>
+        <div id="admin-history"></div>
+      </section>
+    </aside>
+
+    <div class="mapwrap">
+      <div id="map" aria-label="Interactive waterlogging map"></div>
+      <div id="legend" class="legend"></div>
+      <label class="layer-toggle"><input type="checkbox" id="toggle-reports" checked> Show citizen reports</label>
+    </div>
+  </main>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/mock.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
