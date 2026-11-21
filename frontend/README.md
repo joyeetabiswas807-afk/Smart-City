@@ -1,40 +1,38 @@
-# Waterlogging Twin: frontend
+# Waterlogging Twin: frontend (React + Vite + MapLibre GL JS)
 
-Plain HTML/CSS/JavaScript + [Leaflet](https://leafletjs.com) (map). No build step, no npm, which matches the "HTML, CSS and JavaScript" presentation layer in your Chapter 4 and keeps the "start with a single command" goal easy.
+Matches the stack table: JavaScript frontend with **React + Vite**, map with **MapLibre GL JS** (free OpenStreetMap raster tiles, no API key), talking to the **FastAPI** backend.
 
-## Run it
+## Run
 ```bash
-cd waterlogging-frontend
-python3 -m http.server 5173
-# open http://localhost:5173
+npm install
+cp .env.example .env.local     # optional; defaults already use demo mode
+npm run dev                    # http://localhost:5173
 ```
-It starts in **demo mode** (fake data, no backend needed). Needs internet for the map tiles and Leaflet (loaded from unpkg / OpenStreetMap).
+Starts in **demo mode** (`VITE_USE_MOCK=true`): fake areas, reports and a toy verification engine, so you can build and demo the UI without the backend.
 
-## Connect the real backend
-Edit `js/config.js`:
-```js
-USE_MOCK: false,
-API_BASE: "http://localhost:8000/api",
-MAP_CENTER: [lat, lng],   // your demonstration area
-```
-Backend needs CORS enabled and must follow `API_CONTRACT.md`. If it can't, adjust only `js/api.js`.
+## Connect to your teammates' FastAPI
+1. In `.env.local` set `VITE_USE_MOCK=false` and `VITE_MAP_CENTER=lat,lng` (your demonstration area).
+2. Run FastAPI on port 8000 (or `BACKEND_URL=http://localhost:9000 npm run dev`). The Vite dev server proxies `/api` and `/uploads` to it, so **no CORS setup is needed in development**.
+3. Compare their `http://localhost:8000/docs` (auto-generated) with `API_CONTRACT.md`. If a path or field differs, change it in **`src/api/index.js`** (one file) rather than in components.
 
-For the packaged single-command demo, the backend can serve this folder as static files (FastAPI: `app.mount("/", StaticFiles(directory="waterlogging-frontend", html=True))`), then `API_BASE` can be just `"/api"`.
+Production build: `npm run build` creates `dist/`. FastAPI can serve it with `app.mount("/", StaticFiles(directory="dist", html=True))` for the single-command demo.
 
-## What's in it
-| File | Purpose |
+## Structure
+| Path | Purpose |
 |---|---|
-| `index.html` | Page layout: Overview / Report / My reports / Admin tabs + map |
-| `css/styles.css` | All styling (responsive; map on top on phones) |
-| `js/config.js` | The only file you normally edit |
-| `js/api.js` | Real backend calls |
-| `js/mock.js` | Fake backend with a toy verification engine, to demo every outcome |
-| `js/app.js` | Map, status colours, report form, result + evidence view, polling |
-| `API_CONTRACT.md` | Endpoint/JSON spec to agree with your teammate |
+| `src/api/index.js` | All backend calls (real) and switch to mock |
+| `src/api/mock.js` | Fake backend for demo mode |
+| `src/App.jsx` | State, 15 s polling, tabs |
+| `src/components/MapView.jsx` | MapLibre map: status polygons, report dots, draggable pin, hover/click |
+| `src/components/Overview.jsx` | Summary, area list, area detail with history |
+| `src/components/ReportForm.jsx` | Report type, map pin / geolocation, depth, photo, result + explanation |
+| `src/components/MyReports.jsx` | Your reports; pending ones update automatically |
+| `src/components/Admin.jsx` | Pending queue, simulated sensors, status history, manual recheck |
+| `src/constants.js` | Status names, colours, depth categories |
+| `API_CONTRACT.md` | Endpoint and JSON shapes to agree with the backend |
 
-## Features mapped to your scope (Ch. 1.4)
-- Interactive map with the five statuses (waterlogged, clear, reported clear (pending), verified clear, verified still waterlogged), distinct by colour, icon and dashed outline for pending.
-- Report form: map pin or "use my location", report type, depth category, optional photo.
-- Immediate result with confidence and **explanation + five-factor evidence** for every decision.
-- "My reports" tracks your reports (stored in the browser) and updates pending ones automatically.
-- Admin tab: pending queue, simulated sensor readings, status changes, manual recheck.
+## Where the other layers of your stack show up in the UI
+- **Open-Meteo rainfall**: header chip, from `GET /rainfall/latest` (backend calls Open-Meteo).
+- **DEM / terrain risk (rasterio + pysheds)**: shown inside each report's "Why this decision" evidence list. A terrain-risk map layer would need an extra endpoint (not included yet).
+- **Sensor simulation script**: Admin tab reads `GET /sensors/latest`.
+- **PostGIS**: areas arrive as GeoJSON polygons from `GET /areas`; MapLibre draws them directly.
